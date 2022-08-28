@@ -36,3 +36,11 @@
       - docker-ce-cli
       - containerd.io
       - docker-compose-plugin
+      - docker-ce-rootless-extras
+      - uidmap
+
+- name: Disable system-wide Docker service
+  systemd:
+    name: docker
+    state: stopped
+    enabled: no

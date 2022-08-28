@@ -1,0 +1,36 @@
+---
+- name: Create user
+  user:
+    name: trs-user
+    shell: /bin/bash
+
+- name: Install prerequisites
+  apt:
+    name:
+      - qemu-user-static
+      - acl
+
+- name: Check Docker rootless availability
+  become_user: trs-user
+  shell: |
+    /bin/bash -lc "
+      docker ps
+      echo $?
+    "
+  register: docker_availability
+
+- name: enable linger
+  shell: |
+    loginctl enable-linger trs-user
+  when: docker_availability.stdout == '1'
+
+- name: Enable Docker rootless
+  become_user: trs-user
+  shell: |
+    /bin/bash -lc "
+      echo 'export XDG_RUNTIME_DIR=/run/user/$(id -u trs-user)' >> ~/.bash_profile
+      source ~/.bash_profile
+      dockerd-rootless-setuptool.sh install | grep -E "^export " >> ~/.bash_profile
+      docker run hello-world
+    "
+  when: docker_availability.stdout == '1'
