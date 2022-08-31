@@ -43,5 +43,5 @@
 - name: Clone
   ansible.builtin.git:
     repo: https://github.com/keyasuda/trip-routing-system.git
-    dest: /home/trs-user/app/trip-routing-system
+    dest: /home/trs-user/app/trip_routing_system
   become_user: trs-user
