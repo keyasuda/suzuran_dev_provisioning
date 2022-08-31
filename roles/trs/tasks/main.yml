@@ -2,7 +2,7 @@
 - name: Create user
   user:
     name: trs-user
-    shell: /bin/bash
+    shell: /usr/bin/bash
 
 - name: Install prerequisites
   apt:
@@ -15,14 +15,14 @@
   shell: |
     /bin/bash -lc "
       docker ps
-      echo $?
     "
+  failed_when: docker_availability.rc not in [0, 1]
   register: docker_availability
 
 - name: enable linger
   shell: |
     loginctl enable-linger trs-user
-  when: docker_availability.stdout == '1'
+  when: docker_availability.rc == 1
 
 - name: Enable Docker rootless
   become_user: trs-user
@@ -30,7 +30,18 @@
     /bin/bash -lc "
       echo 'export XDG_RUNTIME_DIR=/run/user/$(id -u trs-user)' >> ~/.bash_profile
       source ~/.bash_profile
-      dockerd-rootless-setuptool.sh install | grep -E "^export " >> ~/.bash_profile
+      dockerd-rootless-setuptool.sh install
+
+      echo 'export PATH=/usr/bin:$PATH' >> ~/.bash_profile
+      echo 'export DOCKER_HOST=unix:///run/user/$(id -u trs-user)/docker.sock' >> ~/.bash_profile
+
+      source ~/.bash_profile
       docker run hello-world
     "
-  when: docker_availability.stdout == '1'
+  when: docker_availability.rc == 1
+
+- name: Clone
+  ansible.builtin.git:
+    repo: https://github.com/keyasuda/trip-routing-system.git
+    dest: /home/trs-user/app/trip-routing-system
+  become_user: trs-user
