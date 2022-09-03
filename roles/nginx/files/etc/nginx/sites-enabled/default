@@ -1,0 +1,43 @@
+upstream backend {
+  server 127.0.0.1:3009;
+}
+
+server {
+
+  location /.well-known/ {
+    default_type "text/plain";
+    root /var/www/html;
+  }
+
+  location / {
+    proxy_pass http://backend;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header  X-Forwarded-Ssl on;
+    proxy_redirect off;
+  }
+
+  server_name trs.suzuran.dev; # managed by Certbot
+
+  listen [::]:443 ssl ipv6only=on; # managed by Certbot
+  listen 443 ssl; # managed by Certbot
+  ssl_certificate /etc/letsencrypt/live/trs.suzuran.dev/fullchain.pem; # managed by Certbot
+  ssl_certificate_key /etc/letsencrypt/live/trs.suzuran.dev/privkey.pem; # managed by Certbot
+  include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+  ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+server {
+  if ($host = trs.suzuran.dev) {
+      return 301 https://$host$request_uri;
+  } # managed by Certbot
+
+
+  listen 80 ;
+  listen [::]:80 ;
+  server_name trs.suzuran.dev;
+  return 404; # managed by Certbot
+
+}

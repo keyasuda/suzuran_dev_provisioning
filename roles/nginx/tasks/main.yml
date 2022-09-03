@@ -1,0 +1,13 @@
+---
+- name: Install packages
+  apt:
+    name:
+      - nginx
+      - certbot
+      - python3-certbot-nginx
+
+- name: put config
+  copy:
+    src: "etc/nginx/"
+    dest: "/etc/nginx/"
+  notify: reload nginx
