@@ -1,0 +1,51 @@
+version: "3"
+
+volumes:
+  valhalla_tiles:
+  nominatim-data:
+
+services:
+  app:
+    image: ghcr.io/keyasuda/trip-routing-system:latest
+    environment:
+      - RAILS_ENV=production
+      - SECRET_KEY_BASE={{ secret_key_base }}
+    volumes:
+      - type: bind
+        source: "./db"
+        target: "/app/db"
+      - type: bind
+        source: "./config/settings/"
+        target: "/app/config/settings"
+
+  prod-proxy:
+    depends_on:
+      - valhalla
+      - nominatim
+      - app
+    image: nginx:latest
+    ports:
+      - "3009:80"
+    volumes:
+      - type: bind
+        source: "./vendor/docker/prod-proxy/nginx.conf"
+        target: "/etc/nginx/nginx.conf"
+
+  valhalla:
+    build: ./vendor/docker/valhalla/
+    volumes:
+      - "valhalla_tiles:/data"
+      - type: bind
+        source: "./japan-latest.osm.pbf"
+        target: "/data.osm.pbf"
+
+  nominatim:
+    image: mediagis/nominatim:3.7
+    environment:
+      - PBF_PATH=/nominatim/data.osm.pbf
+      - REPLICATION_URL=https://download.geofabrik.de/asia/japan-updates/
+    volumes:
+      - "nominatim-data:/var/lib/postgresql/12/main"
+      - type: bind
+        source: "./japan-latest.osm.pbf"
+        target: "/nominatim/data.osm.pbf"

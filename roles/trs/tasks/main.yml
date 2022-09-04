@@ -44,4 +44,23 @@
   ansible.builtin.git:
     repo: https://github.com/keyasuda/trip-routing-system.git
     dest: /home/trs-user/app/trip_routing_system
+    force: yes
   become_user: trs-user
+
+- name: Put docker-conpose.yml
+  become_user: trs-user
+  template:
+    src: docker-compose.yml
+    dest: /home/trs-user/app/trip_routing_system/
+
+- name: Put GSI tile config
+  become_user: trs-user
+  copy:
+    src: production.local.yml
+    dest: /home/trs-user/app/trip_routing_system/config/settings/
+
+- name: Put prod-proxy config
+  become_user: trs-user
+  copy:
+    src: nginx.conf
+    dest: /home/trs-user/app/trip_routing_system/vendor/docker/prod-proxy/
