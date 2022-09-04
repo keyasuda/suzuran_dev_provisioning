@@ -24,12 +24,39 @@ services:
       - nominatim
       - app
     image: nginx:latest
-    ports:
-      - "3009:80"
     volumes:
       - type: bind
         source: "./vendor/docker/prod-proxy/nginx.conf"
         target: "/etc/nginx/nginx.conf"
+
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.2.1
+    depends_on:
+      - prod-proxy
+    environment:
+      OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
+      OAUTH2_PROXY_PROVIDER: github
+      OAUTH2_PROXY_CLIENT_ID: 5d3c31dedad75a587a04
+      OAUTH2_PROXY_CLIENT_SECRET: "{{ oauth2_proxy_client_secret }}"
+      OAUTH2_PROXY_EMAIL_DOMAINS: "*"
+      OAUTH2_PROXY_UPSTREAMS: http://prod-proxy:80/
+      OAUTH2_PROXY_COOKIE_SECRET: "{{ oauth2_proxy_cookie_secret }}"
+      OAUTH2_PROXY_BANNER: |
+        <div style="text-align: left; margin-bottom: 1em;">
+          <h1>TRSデモ環境</h1>
+          <div>
+            <a href="https://github.com/keyasuda/trip-routing-system">GitHub</a>で配布されている版との相違点
+            <ul style="list-style: disc; margin-left: 1.5em;">
+              <li>GitHubアカウントでの認証が必要</li>
+              <li>地図タイルとして地理院タイルを使用</li>
+            </ul>
+          </div>
+          <p>
+            予告なしに改廃等を行う可能性がありますのでご了承下さい。
+          </p>
+        </div>
+    ports:
+      - 3009:4180
 
   valhalla:
     build: ./vendor/docker/valhalla/
