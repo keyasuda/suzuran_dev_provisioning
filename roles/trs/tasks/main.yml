@@ -64,3 +64,19 @@
   copy:
     src: nginx.conf
     dest: /home/trs-user/app/trip_routing_system/vendor/docker/prod-proxy/
+
+- name: Docker pull
+  become_user: trs-user
+  shell: |
+    /bin/bash -lc "
+      cd /home/trs-user/app/trip_routing_system/
+      docker compose pull
+    "
+
+- name: Restart app
+  become_user: trs-user
+  shell: |
+    /bin/bash -lc "
+      cd /home/trs-user/app/trip_routing_system/
+      docker compose kill app && docker compose up app -d
+    "
