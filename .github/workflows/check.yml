@@ -1,0 +1,23 @@
+name: Ansible Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2.3.0
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+      - uses: actions/checkout@v2
+      - name: Put key
+        run: echo ${{ secrets.VAULT_PASSWD }} > passwd
+      - name: ansible-playbook --check
+        run: ansible-playbook --check -i hosts --vault-pass-file passwd site.yml
