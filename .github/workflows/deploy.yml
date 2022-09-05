@@ -1,0 +1,20 @@
+name: Provisioning
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2.3.0
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+      - uses: actions/checkout@v2
+      - name: Run ansible-playbook
+        run: echo ${{ secrets.VAULT_PASSWD }} > passwd && ./run.sh
