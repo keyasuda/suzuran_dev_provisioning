@@ -7,13 +7,23 @@ volumes:
 services:
   app:
     image: ghcr.io/keyasuda/trip-routing-system:latest
+    command: |
+      /bin/bash -c "
+        cd /app
+        litestream restore -o db/production.sqlite3 s3://trs.suzuran.dev.litestream/production.sqlite3
+        rm /app/tmp/pids/*
+        litestream replicate db/production.sqlite3 s3://trs.suzuran.dev.litestream/production.sqlite3 &
+        ln -sf /dev/stdout log/production.log
+        rails db:migrate
+        rails s
+      "
     environment:
       - RAILS_ENV=production
       - SECRET_KEY_BASE={{ secret_key_base }}
+      - LITESTREAM_ENDPOINT=gateway.storjshare.io
+      - LITESTREAM_ACCESS_KEY_ID={{ litestream_access_key_id }}
+      - LITESTREAM_SECRET_ACCESS_KEY={{ litestream_secret_access_key }}
     volumes:
-      - type: bind
-        source: "./db"
-        target: "/app/db"
       - type: bind
         source: "./config/settings/"
         target: "/app/config/settings"
