@@ -40,6 +40,20 @@
     "
   when: docker_availability.rc == 1
 
+- name: Put GOOGLE_APPLICATION_CREDENTIALS to systemd unit
+  become_user: trs-user
+  copy:
+    src: .config/systemd/user/docker.service
+    dest: /home/trs-user/.config/systemd/user/
+  notify: restart rootless docker
+
+- name: Put GCP key file
+  become_user: trs-user
+  copy:
+    src: trs-suzuran-dev-0eac1ce74875.json
+    dest: /home/trs-user/
+  notify: restart rootless docker
+
 - name: Clone
   ansible.builtin.git:
     repo: https://github.com/keyasuda/trip-routing-system.git

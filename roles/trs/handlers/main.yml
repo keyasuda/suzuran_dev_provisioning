@@ -1,0 +1,19 @@
+---
+- name: get my user id
+  become_user: trs-user
+  command: id -u
+  register: myuid
+  listen:
+    - restart rootless docker
+
+- name: restart rootless docker
+  become_user: trs-user
+  ansible.builtin.systemd:
+    name: docker.service
+    scope: user
+    state: restarted
+    daemon_reload: yes
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ myuid.stdout }}"
+  listen:
+    - restart rootless docker
