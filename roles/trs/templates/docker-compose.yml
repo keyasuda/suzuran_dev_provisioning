@@ -4,6 +4,11 @@ volumes:
   valhalla_tiles:
   nominatim-data:
 
+x-logging: &default-logging
+  driver: gcplogs
+  options:
+    gcp-project: "trs-suzuran-dev"
+
 services:
   app:
     image: ghcr.io/keyasuda/trip-routing-system:latest
@@ -23,6 +28,7 @@ services:
       - LITESTREAM_ENDPOINT=gateway.storjshare.io
       - LITESTREAM_ACCESS_KEY_ID={{ litestream_access_key_id }}
       - LITESTREAM_SECRET_ACCESS_KEY={{ litestream_secret_access_key }}
+    logging: *default-logging
     volumes:
       - type: bind
         source: "./config/settings/"
@@ -34,6 +40,7 @@ services:
       - nominatim
       - app
     image: nginx:latest
+    logging: *default-logging
     volumes:
       - type: bind
         source: "./vendor/docker/prod-proxy/nginx.conf"
@@ -43,6 +50,7 @@ services:
     image: quay.io/oauth2-proxy/oauth2-proxy:v7.2.1
     depends_on:
       - prod-proxy
+    logging: *default-logging
     environment:
       OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
       OAUTH2_PROXY_PROVIDER: github
@@ -70,6 +78,7 @@ services:
 
   valhalla:
     build: ./vendor/docker/valhalla/
+    logging: *default-logging
     volumes:
       - "valhalla_tiles:/data"
       - type: bind
@@ -78,6 +87,7 @@ services:
 
   nominatim:
     image: mediagis/nominatim:3.7
+    logging: *default-logging
     environment:
       - PBF_PATH=/nominatim/data.osm.pbf
       - REPLICATION_URL=https://download.geofabrik.de/asia/japan-updates/
