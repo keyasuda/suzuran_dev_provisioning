@@ -9,6 +9,9 @@
     name:
       - qemu-user-static
       - acl
+      - sqlite3
+      - rclone
+      - xz-utils
 
 - name: Check Docker rootless availability
   become_user: trs-user
@@ -94,3 +97,19 @@
       cd /home/trs-user/app/trip_routing_system/
       docker compose kill app && docker compose up app -d
     "
+
+- name: Put rclone.conf
+  become_user: trs-user
+  copy:
+    src: .config/rclone/rclone.conf
+    dest: /home/trs-user/.config/rclone/rclone.conf
+    force: no
+
+- name: Setup daily SQLite backup
+  become_user: trs-user
+  cron:
+    name: SQLite backup
+    minute: 7
+    hour: 3
+    job: "sqlite3 /home/trs-user/app/trip_routing_system/db/production.sqlite3 '.dump' | xz | rclone rcat drive:/production.sqlite3.dump.xz"
+    state: present
