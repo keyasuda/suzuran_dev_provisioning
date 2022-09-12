@@ -65,6 +65,11 @@ services:
             予告なしに改廃等を行う可能性がありますのでご了承下さい。
           </p>
         </div>
+        <script type="text/javascript">
+          document.documentElement.addEventListener('turbo:render', () => {
+            document.querySelector('button[type="submit"]').dataset['turbo'] = 'false'
+          })
+        </script>
     restart: always
     ports:
       - 3009:4180
